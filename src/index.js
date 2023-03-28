@@ -1,153 +1,117 @@
-// write your code here
+const baseUrl = `http://localhost:3000/ramens`
 
-// 1: install, start json-server and review data
-// 2. open index.html and dev tools in browser
-// 3. open index.html file and review elements
-// 4. read README once over
-// 5. set up url endpoints
+const ramenMenu = document.getElementById('ramen-menu')
 
-const baseUrl = `http://localhost:3000`
-const ramensUrl = `http://localhost:3000/ramens`
+const ramenDetailContainer = document.getElementById('ramen-detail')
+const ramenImage = document.querySelector('.detail-image')
+const ramenName = ramenDetailContainer.querySelector('.name')
+const ramenRestaurant = ramenDetailContainer.querySelector('.restaurant')
 
-// 6. split deliverables and break up each deliverable.
-
-        // See all ramen images in the `div` with the id of `ramen-menu`. When the page
-        // loads, request the data from the server to get all the ramen objects. Then,
-        // display the image for each of the ramen using an `img` tag inside the
-        // `#ramen-menu` div.
-
-        // a. organize which elements or data you need.
-            // get div with id 'ramen-menu'
-
-            const ramenMenu = document.getElementById('ramen-menu');
-            // tip: console.log your data and elements to make sure you are getting the ones you want
-            // console.log(ramenMenu)
-            // caution: always remember to delete your console.logs afterwards, not just comment them out
-
-        // b. fetch all ramen objects
-
-            // test out your data and console.log to confirm your data with the server
-            // fetch(ramensUrl).then(res => res.json()).then((console.log))
-
-        //     fetch(ramensUrl)
-        //     .then(res => res.json())
-        //     .then(data => data.forEach(ramen => {
-        //         // confirm you're getting each object separately
-        //         // console.log(ramen)
-
-        // // c. create image tag for each ramen
-
-        //             const ramenImg = document.createElement('img');
-        //             ramenImg.src = ramen.image
-        //             ramenImg.alt = ramen.name
-        // // d. add image tag to div
-
-        //             ramenMenu.appendChild(ramenImg)
-
-        //         })
-        //     )
+const ramenRating = document.getElementById('rating-display')
+const ramenComment = document.getElementById('comment-display')
 
 
+const newRamenForm = document.getElementById('new-ramen')
+const newName = document.getElementById('new-name')
+const newRestaurant = document.getElementById('new-restaurant')
+const newImage = document.getElementById('new-image')
+const newRating = document.getElementById('new-rating')
+const newComment = document.getElementById('new-comment')
 
-        // Click on an image from the `#ramen-menu` div and see all the info about that
-        // ramen displayed inside the `#ramen-detail` div and where it says
-        // `insert comment here` and `insert rating here`.
+const editRamenForm = document.getElementById('edit-ramen')
+const editRating = document.getElementById('new-rating')
+const editComment = document.getElementById('new-comment')
 
-        // a. gather necessary elements/data
+const deleteRamenBtn = document.getElementById('delete-ramen')
 
-                // get ramen detail div container
+fetch(baseUrl)
+.then(res => res.json())
+.then(function(data){
+    showRamenDetails(data[0])
 
-                const ramenDetailContainer = document.getElementById('ramen-detail')
-                // console.log(ramenDetail)
+    data.forEach(function(ramenObj){
+        showNewRamen(ramenObj)
+    })
+})
 
-                // get elements inside ramen detail div that you will be changing (img, name, restaurant)
+newRamenForm.addEventListener('submit', (e) => {
+    e.preventDefault()
 
-                // Different ways to get these elements:
-                // 1. className
+    const newRamenObj = {
+        name: newName.value,
+        restaurant: newRestaurant.value,
+        image: newImage.value,
+        comment: newComment.value,
+        rating: newRating.value
+    }
 
-                // don't forget to grab the first element using [0] because it's an array
+    fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+            'Content-type': 'application/json'
+        },
+        body: JSON.stringify(newRamenObj)
+        }).then(res => res.json())
+        .then(showNewRamen)
 
-                // console.log to confirm
-                // const ramenImageWithoutIdx = document.getElementsByClassName('detail-image')
-                // const ramenImage = document.getElementsByClassName('detail-image')[0]
+    })
 
-                // 2. add ids to elements yourself inside index.html
+deleteRamenBtn.addEventListener('click', deleteRamen)
 
-                // const ramenImage = document.getElementById('detail-image')
-                // console.log('hi', ramenImage)
+function editRamen(ramen){
 
-                // 3. query using div container and query selector
+    const editRamenObj = {
+        rating: editRating.value,
+        comment: editComment.value
+    }
 
-                // const ramenImage = document.querySelector('#ramen-detail > .detail-image')
-                // console.log(ramenImage)
+    fetch(`${baseUrl}/${ramen.id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editRamenObj)
+    }).then(res => res.json())
+    .then(showRamenDetails)
+}
 
-                // const ramenImage = document.querySelector('.detail-image')
-                // console.log(ramenImage)
+function deleteRamen(){
+    const deletedRamenId = ramenDetailContainer.dataset.id
 
-                // remember that query selector will only return first element in this case, even if there are multiple elements
-                // with that query so make sure that the first element is what you want
-                // use the first query to be more specific
+    fetch(`${baseUrl}/${deletedRamenId}`, {
+        method: 'DELETE'
+    }).then(res => res.json())
+    .then(res => {
+        const deletedRamen = ramenMenu.querySelector(`[data-id="${deletedRamenId}"]`)
+        deletedRamen.remove()
+    })
+}
 
-                // 4. query inside div container
+function showNewRamen(ramen){
+    const ramenImg = document.createElement('img')
+    ramenImg.src = ramen.image
+    ramenImg.alt = ramen.name
+    ramenImg.dataset.id = ramen.id
 
-                // or, query inside the ramen container specifically, like this:
+    ramenImg.addEventListener('click', (e) => {
+        showRamenDetails(ramen)
+    })
 
-                const ramenImage = ramenDetailContainer.querySelector('.detail-image')
-                const ramenName = ramenDetailContainer.querySelector('.name')
-                const ramenRestaurant = ramenDetailContainer.querySelector('.restaurant')
+    ramenMenu.appendChild(ramenImg)
+}
 
-                // console.log(ramenImage, ramenName, ramenRestaurant)
+function showRamenDetails(ramen){
+    ramenImage.src = ramen.image
+    ramenImage.alt = ramen.name
+    ramenName.innerText = ramen.name
+    ramenRestaurant.innerText = ramen.restaurant
+    ramenRating.innerText = ramen.rating
+    ramenComment.innerText = ramen.comment
 
+    ramenDetailContainer.dataset.id = ramen.id
 
-
-
-                // image tag -- inside fetch request above
-
-                // this is the same fetch as above (just copied it down)
-
-                fetch(ramensUrl)
-                .then(res => res.json())
-                .then(data => data.forEach(ramen => {
-                        const ramenImg = document.createElement('img');
-                        ramenImg.src = ramen.image
-                        ramenImg.alt = ramen.name
-
-        // b. add event listener to each individual image element
-
-
-                        // we want to do everything we need to do to the image tag here
-                        // before we append it to the div so make sure to make space before
-                        // the appendChild below
-
-
-                        ramenImg.addEventListener('click', (e) => {
-                            // e refers to the event object that  is automatically passed in to
-                            // the callback function of an event listener, has information about the
-                            // event, including which element in the HTML triggered it
-                            // you can access the specific object with e.target
-                            // console.log(e.target)
-
-                            // ramen is the ramen object on line 109 -- i still have access to it because i'm writing
-                            // my callback function for the event listener inside
-                            // if i write a separate function like showRamenDetails, for example, I'd need to write
-                            // ramenImg.addEventListener('click', (e, ramen) => showRamenDetails(ramen))
-                            // the second argument will be the ramen object we are iterating through from our fetch
-
-        // c. add Ramen details from fetch to elements we grabbed above
-
-                            ramenImage.src = ramen.image
-                            ramenImage.alt = ramen.name
-
-                            ramenName.innerText = ramen.name
-                            ramenRestaurant.innerText = ramen.restaurant
-
-                        })
-                        ramenMenu.appendChild(ramenImg)
-
-                    })
-                )
-
-        // - Create a new ramen after submitting the `new-ramen` form. The new ramen should
-        // be added to the`#ramen-menu` div. The new ramen does not need to persist; in
-        // other words, if you refresh the page, it's okay that the new ramen is no
-        // longer on the page.
+    editRamenForm.addEventListener('submit', (e) => {
+        e.preventDefault()
+        editRamen(ramen)
+    })
+}
